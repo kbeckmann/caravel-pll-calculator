@@ -29,8 +29,15 @@ def eprint(*args, **kwargs):
 def generate_pll(clkin, clkout, pll_low_limit, pll_high_limit, multiplier=0, allow_deviation=False):
     configs = []
     ideal_configs = []
+    m_min = 1
+    m_max = 2**5
+
+    if multiplier != 0:
+        m_min = multiplier
+        m_max = multiplier + 1
+
     # Iterate over the valid feedback divisor values
-    for m in range(1, 2**5):
+    for m in range(m_min, m_max):
         multiplied = clkin * m
         if (multiplied < pll_low_limit):
             # vprint(f"{multiplied} is lower than the pll-low-limit")

@@ -33,7 +33,7 @@ PLL Parameters:
 
 clkin:    16.00 MHz
 clkout:   48.00 MHz
-clkout90: 88.00 MHz
+clkout90: 72.00 MHz
 
 PLL Feedback Divider: 9
 PLL Output Divider 1: 3
@@ -49,7 +49,7 @@ $ python caravel_pll.py --clkin 16 --clkout 48 --clkout90 90 --allow-deviation -
 {
   "clkin": 16,
   "clkout": 48,
-  "clkout90": 88,
+  "clkout90": 72,
   "fbdiv": 9,
   "div1": 3,
   "div2": 2,
