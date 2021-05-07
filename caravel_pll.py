@@ -119,19 +119,67 @@ PLL Output Divider 2: {clkout90_conf["d"]}
 Register 0x11: {reg0x11:#04x}
 Register 0x12: {reg0x12:#04x}""")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate a PLL configuration for the Caravel management core. All frequencies are specified in MHz.')
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--clkin', '-i',     type=float, default=10,             help='Frequency (MHz) of the input clock')
-    parser.add_argument('--clkout', '-o',    type=float, required=True,          help='Frequency (MHz) of the first output clock')
-    parser.add_argument('--clkout90',        type=float,                         help='Frequency (MHz) of the second, 90 degrees phase shifted, output clock')
-    parser.add_argument('--allow-deviation', action='store_true', default=False, help='Allow deviation from the requested frequencies')
-    parser.add_argument('--pll-low-limit',   type=float, default=90,             help='Low limit of the allowed PLL output frequency')
-    parser.add_argument('--pll-high-limit',  type=float, default=214,            help='High limit of the allowed PLL output frequency')
-    parser.add_argument('--json',            action='store_true', default=False, help='Output as JSON')
-    parser.add_argument('--verbose',         action='store_true', default=False, help='Enable verbose prints')
+
+def list_configs(args):
+    clkin = args.clkin
+    pll_low_limit = args.pll_low_limit
+    pll_high_limit = args.pll_high_limit
+    configs = []
+
+    for m in range(1, 2**5):
+        multiplied = clkin * m
+        if (multiplied < pll_low_limit or multiplied > pll_high_limit):
+            continue
+        for d in range(1, 2**3):
+            freq = multiplied / d
+            configs.append({"m":m, "d":d, "freq": freq, "pllfreq": multiplied})
+
+    sorted_configs = sorted(configs, key=lambda c: c["freq"])
+
+    if args.json:
+        print(json.dumps(sorted_configs))
+    else:
+        print("clkout\t\tfbdiv\tdiv\tpllfreq")
+        for c in sorted_configs:
+            print(f"{(args.clkin * c['m'] / c['d']):8.3f} MHz\t{c['m']}\t{c['d']}\t{c['pllfreq']:5.1f} MHz")
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate PLL configurations for the Caravel management core. All frequencies are specified in MHz.')
+
+    subparsers = parser.add_subparsers(dest="action")
+    subparsers.required = True
+
+    parser.add_argument('--verbose', action='store_true', default=False, help='Enable verbose prints')
+
+    p_generate = subparsers.add_parser(
+        "generate",
+        help="generate configuration",
+        description="Generates a configuration for a desired output frequency")
+    p_generate.add_argument('--clkin', '-i',     type=float, default=10,             help='Frequency (MHz) of the input clock')
+    p_generate.add_argument('--clkout', '-o',    type=float, required=True,          help='Frequency (MHz) of the first output clock')
+    p_generate.add_argument('--clkout90',        type=float,                         help='Frequency (MHz) of the second, 90 degrees phase shifted, output clock')
+    p_generate.add_argument('--allow-deviation', action='store_true', default=False, help='Allow deviation from the requested frequencies')
+    p_generate.add_argument('--pll-low-limit',   type=float, default=90,             help='Low limit of the allowed PLL output frequency')
+    p_generate.add_argument('--pll-high-limit',  type=float, default=214,            help='High limit of the allowed PLL output frequency')
+    p_generate.add_argument('--json',            action='store_true', default=False, help='Output as JSON')
+
+    p_list = subparsers.add_parser(
+        "list",
+        help="list all valid configurations",
+        description="List all valid configurations for a given input frequency")
+    p_list.add_argument('--clkin', '-i',     type=float, required=True,                  help='Frequency (MHz) of the input clock')
+    p_list.add_argument('--pll-low-limit',   type=float, default=90,             help='Low limit of the allowed PLL output frequency')
+    p_list.add_argument('--pll-high-limit',  type=float, default=214,            help='High limit of the allowed PLL output frequency')
+    p_list.add_argument('--json',            action='store_true', default=False, help='Output as JSON')
+
     args = parser.parse_args()
 
     VERBOSE = args.verbose
 
-    generate_config(args)
+    if args.action == 'generate':
+        generate_config(args)
+    elif args.action == 'list':
+        list_configs(args)
+
+if __name__ == "__main__":
+    main()
