@@ -167,7 +167,7 @@ def main():
         "list",
         help="list all valid configurations",
         description="List all valid configurations for a given input frequency")
-    p_list.add_argument('--clkin', '-i',     type=float, required=True,                  help='Frequency (MHz) of the input clock')
+    p_list.add_argument('--clkin', '-i',     type=float, required=True,          help='Frequency (MHz) of the input clock')
     p_list.add_argument('--pll-low-limit',   type=float, default=90,             help='Low limit of the allowed PLL output frequency')
     p_list.add_argument('--pll-high-limit',  type=float, default=214,            help='High limit of the allowed PLL output frequency')
     p_list.add_argument('--json',            action='store_true', default=False, help='Output as JSON')
