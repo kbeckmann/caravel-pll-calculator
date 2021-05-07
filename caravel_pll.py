@@ -39,25 +39,21 @@ def generate_pll(clkin, clkout, pll_low_limit, pll_high_limit, multiplier=0, all
     # Iterate over the valid feedback divisor values
     for m in range(m_min, m_max):
         multiplied = clkin * m
-        if (multiplied < pll_low_limit):
-            # vprint(f"{multiplied} is lower than the pll-low-limit")
-            continue
-        if (multiplied > pll_high_limit):
-            # vprint(f"{multiplied} is higher than the pll-high-limit")
+        if (multiplied < pll_low_limit or multiplied > pll_high_limit):
             continue
         for d in range(1, 2**3):
             divided = multiplied / d
             deviation = divided - clkout
             configs.append({"m":m, "d":d, "deviation": deviation})
             if divided == clkout:
-                ideal_configs.append({"m":m, "d":d, "deviation": deviation})
+                ideal_configs.append({"m":m, "d":d})
                 vprint(f"Found a config without deviation: m={m}, d={d}")
 
     # Find the config where the multiplied frequency is closest to the center of the pll limits
     best_config = None
     best_freq = 1e9
     center_freq = pll_low_limit + (pll_high_limit - pll_low_limit) / 2
-    for i, c in enumerate(ideal_configs):
+    for c in ideal_configs:
         freq = c["m"] * clkin
         if abs(freq - center_freq) < abs(best_freq - center_freq):
             vprint(f"Found a better config: m={c['m']}, d={c['d']}, pllfreq={freq}")
@@ -67,7 +63,7 @@ def generate_pll(clkin, clkout, pll_low_limit, pll_high_limit, multiplier=0, all
     # If deviation is allowed, find the config with the lowest.
     if best_config == None and allow_deviation:
         best_deviation = 1e9
-        for i, c in enumerate(configs):
+        for c in configs:
             freq = c["m"] * clkin / c["d"]
             deviation = abs(freq - clkout)
             if deviation < best_deviation:
